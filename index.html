@@ -1,13 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Smart Timetable</title>
   <meta name="theme-color" content="#ffffff" />
-  <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Smart%20Timetable%22,%22short_name%22:%22Timetable%22,%22start_url%22:%22.%2Findex.html%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%23ffffff%22}">
-
-  <style>
+  <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Smart%20Timetable%22,%22short_name%22:%22Timetable%22,%22start_url%22:%22.%2Findex.html%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%23ffffff%22}">  <style>
     :root {
       --bg: #ffffff; --text: #333; --card: #f3f6fa;
     }
@@ -37,27 +34,20 @@
     .topic-list li { display: flex; justify-content: space-between; margin: 2px 0; }
     .topic-list button { background: #f44336; border: none; color: white; border-radius: 3px; padding: 2px 6px; cursor: pointer; font-size: 0.8rem; }
     footer{ margin-top:20px;}
-  </style>
-</head>
+  </style></head>
 <body>
   <div class="clock" id="clock">00:00:00</div>
-  <button id="themeToggle">🌙 Dark Mode</button>
-
-  <div class="container">
+  <button id="themeToggle">🌙 Dark Mode</button>  <div class="container">
     <div class="date-icon" id="dateIcon">
       <div class="day">Mon</div>
       <div class="date">1</div>
     </div>
-    <h1>Aadarsh Daily Timetable</h1>
+    <h1>Aadarsh Timetable</h1>
     <div class="schedule" id="schedule"></div>
     <footer>✨ Designed with ❤️ by Aayush</footer>
-  </div>
-
-  <audio id="alarmSound" preload="auto">
+  </div>  <audio id="alarmSound" preload="auto">
     <source src="https://www.soundjay.com/button/beep-07.wav" type="audio/wav">
-  </audio>
-
-  <script>
+  </audio>  <script>
     const tasks = [
       {id:"wake",label:"🌅 Wake Up",time:"05:30"},
       {id:"run",label:"🏃 Running",time:"07:00"},
@@ -80,6 +70,18 @@
       clockEl.textContent = now.toLocaleTimeString();
       updateDateIcon(now);
       updateBackground(now);
+      tasks.forEach(t => {
+        const checkbox = document.getElementById(`check-${t.id}`);
+        if (!checkbox) return;
+        const [h, m] = t.time.split(":").map(Number);
+        const scheduledTime = new Date();
+        scheduledTime.setHours(h, m, 0, 0);
+        if (now >= scheduledTime && !checkbox.checked) {
+          checkbox.checked = true;
+          checkbox.parentElement.classList.add("completed");
+          localStorage.setItem(`done-${t.id}`, true);
+        }
+      });
     }
     setInterval(updateClock,1000);
     updateClock();
@@ -93,16 +95,26 @@
     function updateBackground(now){
       const h = now.getHours();
       let url = "";
-      if (h>=6 && h<12) url="https://images.app.goo.gl/gha737dULPPdPbuYA";       
+      if (h>=6 && h<12) url="https://i.imgur.com/Morning.jpg";       
       else if (h>=12 && h<17) url="https://i.imgur.com/Afternoon.jpg";
       else if (h>=17 && h<20) url="https://i.imgur.com/Evening.jpg";
-      else url="https://images.app.goo.gl/S8Lfb3yt83tdsCpi7";
+      else url="https://i.imgur.com/Night.jpg";
       document.body.style.backgroundImage = `url(${url})`;
     }
 
     function toggleComplete(c,id){
-      c.parentElement.classList.toggle("completed",c.checked);
-      localStorage.setItem(`done-${id}`,c.checked);
+      const task = tasks.find(t => t.id === id);
+      const now = new Date();
+      const [h, m] = task.time.split(":").map(Number);
+      const scheduled = new Date();
+      scheduled.setHours(h, m, 0, 0);
+      if (now < scheduled) {
+        alert("You can't mark this task complete yet. The time is not over.");
+        c.checked = false;
+        return;
+      }
+      c.parentElement.classList.toggle("completed", c.checked);
+      localStorage.setItem(`done-${id}`, c.checked);
     }
 
     function setAlarm(timeStr,label){
@@ -158,7 +170,7 @@
         const done = localStorage.getItem(`done-${t.id}`)==="true";
         const d = document.createElement("div"); d.className="card";
         d.innerHTML = `<label class="${done?'completed':''}">
-          <input type="checkbox" ${done?"checked":""} onchange="toggleComplete(this,'${t.id}')">
+          <input type="checkbox" id="check-${t.id}" ${done?"checked":""} onchange="toggleComplete(this,'${t.id}')">
           ${t.label}: <strong>${t.time}</strong>
           <button class="alarm-btn" onclick="setAlarm('${t.time}','${t.label}')">🔔</button>
         </label>
@@ -185,6 +197,5 @@
       navigator.serviceWorker.register("data:text/javascript,self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>new Response('Offline'))));")
       .then(()=>console.log("SW active"));
     }
-  </script>
-</body>
+  </script></body>
 </html>
