@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Timetable</title>
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Smart%20Timetable%22,%22short_name%22:%22Timetable%22,%22start_url%22:%22.%2Findex.html%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%23ffffff%22}">
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #333;
+      --card: #f3f6fa;
+    }
+    body.dark {
+      --bg: #121212;
+      --text: #f0f0f0;
+      --card: #1e1e1e;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+      transition: 0.3s;
+      padding: 40px 20px;
+    }
+    .clock {
+      position: fixed;
+      top: 20px;
+      right: 30px;
+      font-size: 1.3rem;
+    }
+    #themeToggle {
+      position: fixed;
+      top: 20px;
+      left: 30px;
+      background: #ffc107;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .container {
+      max-width: 900px;
+      margin: 80px auto 0;
+      background: var(--bg);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .schedule {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+      text-align: left;
+    }
+    .card label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .completed {
+      color: green;
+      text-decoration: line-through;
+    }
+    .alarm-btn {
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="clock" id="clock">00:00:00</div>
+  <button id="themeToggle">🌙 Dark Mode</button>
+
+  <div class="container">
+    <h1>📅 My Daily Timetable</h1>
+    <div class="schedule" id="schedule"></div>
+    <footer>✨ Designed with ❤️ by Aayush</footer>
+  </div>
+
+  <audio id="alarmSound" preload="auto">
+    <source src="https://www.soundjay.com/button/beep-07.wav" type="audio/wav">
+    Your browser does not support the audio tag.
+  </audio>
+
+  <script>
+    const tasks = [
+      { id: "wake", label: "🌅 Wake Up", time: "05:30" },
+      { id: "run", label: "🏃 Running", time: "07:00" },
+      { id: "breakfast", label: "🍽️ Breakfast", time: "08:00" },
+      { id: "study1", label: "📚 Study", time: "08:30" },
+      { id: "lunch", label: "🍛 Lunch", time: "14:30" },
+      { id: "study2", label: "📖 Study", time: "19:30" },
+      { id: "dinner", label: "🍽️ Dinner", time: "21:30" },
+      { id: "sleep", label: "😴 Sleep", time: "23:30" }
+    ];
+
+    const alarmSound = document.getElementById("alarmSound");
+    const container = document.getElementById("schedule");
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById("clock").textContent = now.toLocaleTimeString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function toggleComplete(checkbox, id) {
+      checkbox.parentElement.classList.toggle("completed", checkbox.checked);
+      localStorage.setItem(`done-${id}`, checkbox.checked);
+    }
+
+    function setAlarm(timeStr, label) {
+      const [h, m] = timeStr.split(":");
+      const now = new Date();
+      const alarmTime = new Date();
+      alarmTime.setHours(h, m, 0, 0);
+
+      if (alarmTime < now) alarmTime.setDate(alarmTime.getDate() + 1);
+      const timeToAlarm = alarmTime - now;
+
+      setTimeout(() => {
+        alarmSound.play();
+        if (confirm(`🔔 Time for ${label}!\nSnooze for 5 minutes?`)) {
+          setTimeout(() => alarmSound.play(), 5 * 60 * 1000);
+        }
+      }, timeToAlarm);
+
+      alert(`⏰ Alarm set for ${label} at ${timeStr}`);
+    }
+
+    function loadTasks() {
+      tasks.forEach(task => {
+        const checked = localStorage.getItem(`done-${task.id}`) === "true";
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <label class="${checked ? 'completed' : ''}">
+            <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleComplete(this, '${task.id}')">
+            ${task.label}: <strong>${task.time}</strong>
+            <button onclick="setAlarm('${task.time}', '${task.label}')" class="alarm-btn">🔔</button>
+          </label>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    document.getElementById("themeToggle").onclick = () => {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    };
+
+    if (localStorage.getItem("theme") === "dark") {
+      document.body.classList.add("dark");
+    }
+
+    loadTasks();
+
+    // Optional: Fake PWA offline support
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register("data:text/javascript,self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>new Response('Offline'))));")
+        .then(() => console.log("Service worker active"));
+    }
+  </script>
+</body>
+</html>
