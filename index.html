@@ -15,7 +15,7 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Poppins',sans-serif;
+      font-family: 'Poppins', sans-serif;
       transition: .3s; padding: 40px 20px;
       background-size: cover; background-position: center;
     }
@@ -53,17 +53,17 @@
 
   <script>
     const tasks = [
-      {id:"wake",label:"🌅 Wake Up & Refresh",time:"07:30"},
-      {id:"exercise",label:"🏃 Morning Exercise",time:"08:00"},
-      {id:"breakfast",label:"🍽️ Breakfast & Prep",time:"08:30"},
-      {id:"coaching",label:"🏫 Coaching Lectures",time:"09:00"},
-      {id:"study1",label:"📚 Self-Study 1",time:"15:30"},
-      {id:"cricket",label:"🏏 Cricket",time:"17:00"},
-      {id:"dinner",label:"🍽️ Dinner",time:"19:00"},
-      {id:"study2",label:"📖 Self-Study 2",time:"19:30"},
-      {id:"winddown",label:"🧘 Wind-down",time:"21:30"},
-      {id:"study3",label:"📖 Self-Study 3",time:"22:30"},
-      {id:"sleep",label:"😴 Sleep",time:"00:00"}
+      { id: "wake", label: "🌅 Wake Up & Refresh", time: "07:30 – 08:00 AM" },
+      { id: "exercise", label: "🏃 Morning Exercise", time: "08:00 – 08:30 AM" },
+      { id: "breakfast", label: "🍽️ Breakfast & Prep", time: "08:30 – 09:00 AM" },
+      { id: "coaching", label: "🏫 Coaching Lectures", time: "09:00 AM – 03:00 PM" },
+      { id: "study1", label: "📚 Self-Study 1", time: "03:30 – 05:00 PM" },
+      { id: "cricket", label: "🏏 Cricket", time: "05:00 – 07:00 PM" },
+      { id: "dinner", label: "🍽️ Dinner", time: "07:00 – 07:30 PM" },
+      { id: "study2", label: "📖 Self-Study 2", time: "07:30 – 09:30 PM" },
+      { id: "winddown", label: "🧘 Wind-down", time: "09:30 – 10:30 PM" },
+      { id: "study3", label: "📖 Self-Study 3", time: "10:30 PM – 12:00 AM" },
+      { id: "sleep", label: "😴 Sleep", time: "12:00 – 07:30 AM" }
     ];
 
     const alarmSound = document.getElementById("alarmSound");
@@ -72,77 +72,49 @@
     const clockEl = document.getElementById("clock");
     const dateIcon = document.getElementById("dateIcon");
 
-    function updateClock(){
+    function updateClock() {
       const now = new Date();
       clockEl.textContent = now.toLocaleTimeString();
       updateDateIcon(now);
-      updateBackground(now);
-      tasks.forEach(t => {
-        const checkbox = document.getElementById(`check-${t.id}`);
-        if (!checkbox) return;
-        const [h, m] = t.time.split(":").map(Number);
-        const scheduledTime = new Date();
-        scheduledTime.setHours(h, m, 0, 0);
-        if (now >= scheduledTime && !checkbox.checked) {
-          checkbox.checked = true;
-          checkbox.parentElement.classList.add("completed");
-          localStorage.setItem(`done-${t.id}`, true);
-        }
-      });
     }
-    setInterval(updateClock,1000);
+    setInterval(updateClock, 1000);
     updateClock();
 
-    function updateDateIcon(now){
-      const dayNames=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    function updateDateIcon(now) {
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       dateIcon.querySelector(".day").textContent = dayNames[now.getDay()];
       dateIcon.querySelector(".date").textContent = now.getDate();
     }
 
-    function updateBackground(now){
-      const h = now.getHours();
-      let url = "";
-      if (h>=6 && h<12) url="https://i.imgur.com/Morning.jpg";       
-      else if (h>=12 && h<17) url="https://i.imgur.com/Afternoon.jpg";
-      else if (h>=17 && h<20) url="https://i.imgur.com/Evening.jpg";
-      else url="https://i.imgur.com/Night.jpg";
-      document.body.style.backgroundImage = `url(${url})`;
-    }
-
-    function toggleComplete(c,id){
-      const task = tasks.find(t => t.id === id);
-      const now = new Date();
-      const [h, m] = task.time.split(":").map(Number);
-      const scheduled = new Date();
-      scheduled.setHours(h, m, 0, 0);
-      if (now < scheduled) {
-        alert("❌ You can't mark this task complete yet. Time is not over.");
-        c.checked = false;
-        return;
-      }
+    function toggleComplete(c, id) {
       c.parentElement.classList.toggle("completed", c.checked);
       localStorage.setItem(`done-${id}`, c.checked);
     }
 
-    function setAlarm(timeStr,label){
-      const [h,m]=timeStr.split(":");
-      const now=new Date();
-      const alarm=new Date();
-      alarm.setHours(h,m,0,0);
-      if(alarm<now)alarm.setDate(alarm.getDate()+1);
-      setTimeout(()=>{
+    function setAlarm(timeStr, label) {
+      const timeParts = timeStr.split("–")[0].trim().split(":");
+      let hour = parseInt(timeParts[0]);
+      let minute = parseInt(timeParts[1]) || 0;
+      const now = new Date();
+      const alarm = new Date();
+      alarm.setHours(hour, minute, 0, 0);
+      if (alarm < now) alarm.setDate(alarm.getDate() + 1);
+      setTimeout(() => {
         alarmSound.play();
-        if(confirm(`🔔 Time for ${label}! Snooze 5 min?`)) setTimeout(()=> alarmSound.play(),5*60*1000);
-      },alarm-now);
+        if (confirm(`🔔 Time for ${label}! Snooze 5 min?`)) {
+          setTimeout(() => alarmSound.play(), 5 * 60 * 1000);
+        }
+      }, alarm - now);
       alert(`⏰ Alarm set for ${label} at ${timeStr}`);
     }
 
-    function loadTasks(){
+    function loadTasks() {
       tasks.forEach(t => {
-        const done = localStorage.getItem(`done-${t.id}`)==="true";
-        const d = document.createElement("div"); d.className="card";
-        d.innerHTML = `<label class="${done?'completed':''}">
-          <input type="checkbox" id="check-${t.id}" ${done?"checked":""} onchange="toggleComplete(this,'${t.id}')">
+        const done = localStorage.getItem(`done-${t.id}`) === "true";
+        const d = document.createElement("div");
+        d.className = "card";
+        d.innerHTML = `<label class="${done ? 'completed' : ''}">
+          <input type="checkbox" id="check-${t.id}" ${done ? "checked" : ""} onchange="toggleComplete(this,'${t.id}')">
           ${t.label}: <strong>${t.time}</strong>
           <button class="alarm-btn" onclick="setAlarm('${t.time}','${t.label}')">🔔</button>
         </label>`;
@@ -150,11 +122,11 @@
       });
     }
 
-    themeBtn.onclick = ()=>{
+    themeBtn.onclick = () => {
       document.body.classList.toggle("dark");
-      localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
     };
-    if(localStorage.getItem("theme")==="dark") document.body.classList.add("dark");
+    if (localStorage.getItem("theme") === "dark") document.body.classList.add("dark");
 
     loadTasks();
   </script>
