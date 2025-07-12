@@ -30,10 +30,6 @@
     .card label{ display:flex; justify-content:space-between; margin-bottom:10px;}
     .completed{ color:green; text-decoration:line-through;}
     .alarm-btn{ margin-left:10px;}
-    .topics { margin-top: 10px; }
-    .topic-list { list-style: disc; padding-left: 20px; margin-bottom: 10px; }
-    .topic-list li { display: flex; justify-content: space-between; margin: 2px 0; }
-    .topic-list button { background: #f44336; border: none; color: white; border-radius: 3px; padding: 2px 6px; cursor: pointer; font-size: 0.8rem; }
     footer{ margin-top:20px;}
   </style>
 </head>
@@ -46,7 +42,7 @@
       <div class="day">Mon</div>
       <div class="date">1</div>
     </div>
-    <h1>📅 Aadarsh Daily Timetable</h1>
+    <h1>📅 My Daily Timetable</h1>
     <div class="schedule" id="schedule"></div>
     <footer>✨ Designed with ❤️ by Aayush</footer>
   </div>
@@ -57,14 +53,17 @@
 
   <script>
     const tasks = [
-      {id:"wake",label:"🌅 Wake Up",time:"05:30"},
-      {id:"run",label:"🏃 Running",time:"07:00"},
-      {id:"breakfast",label:"🍽️ Breakfast",time:"08:00"},
-      {id:"study1",label:"📚 Study (Session 1)",time:"08:30"},
-      {id:"lunch",label:"🍛 Lunch",time:"14:30"},
-      {id:"study2",label:"📖 Study (Session 2)",time:"19:30"},
-      {id:"dinner",label:"🍽️ Dinner",time:"21:30"},
-      {id:"sleep",label:"😴 Sleep",time:"23:30"},
+      {id:"wake",label:"🌅 Wake Up & Refresh",time:"07:30"},
+      {id:"exercise",label:"🏃 Morning Exercise",time:"08:00"},
+      {id:"breakfast",label:"🍽️ Breakfast & Prep",time:"08:30"},
+      {id:"coaching",label:"🏫 Coaching Lectures",time:"09:00"},
+      {id:"study1",label:"📚 Self-Study 1",time:"15:30"},
+      {id:"cricket",label:"🏏 Cricket",time:"17:00"},
+      {id:"dinner",label:"🍽️ Dinner",time:"19:00"},
+      {id:"study2",label:"📖 Self-Study 2",time:"19:30"},
+      {id:"winddown",label:"🧘 Wind-down",time:"21:30"},
+      {id:"study3",label:"📖 Self-Study 3",time:"22:30"},
+      {id:"sleep",label:"😴 Sleep",time:"00:00"}
     ];
 
     const alarmSound = document.getElementById("alarmSound");
@@ -138,41 +137,6 @@
       alert(`⏰ Alarm set for ${label} at ${timeStr}`);
     }
 
-    function addTopic(taskId) {
-      const input = document.getElementById(`${taskId}-input`);
-      const text = input.value.trim();
-      if (!text) return;
-      const dateKey = new Date().toISOString().split('T')[0];
-      const key = `${taskId}-topics-${dateKey}`;
-      const list = JSON.parse(localStorage.getItem(key) || "[]");
-      list.push(text);
-      localStorage.setItem(key, JSON.stringify(list));
-      input.value = '';
-      renderTopics(taskId);
-    }
-
-    function deleteTopic(taskId, index) {
-      const dateKey = new Date().toISOString().split('T')[0];
-      const key = `${taskId}-topics-${dateKey}`;
-      const list = JSON.parse(localStorage.getItem(key) || "[]");
-      list.splice(index, 1);
-      localStorage.setItem(key, JSON.stringify(list));
-      renderTopics(taskId);
-    }
-
-    function renderTopics(taskId) {
-      const dateKey = new Date().toISOString().split('T')[0];
-      const key = `${taskId}-topics-${dateKey}`;
-      const list = JSON.parse(localStorage.getItem(key) || "[]");
-      const ul = document.getElementById(`${taskId}-topics`);
-      ul.innerHTML = '';
-      list.forEach((topic, i) => {
-        const li = document.createElement('li');
-        li.innerHTML = `${topic} <button onclick="deleteTopic('${taskId}', ${i})">X</button>`;
-        ul.appendChild(li);
-      });
-    }
-
     function loadTasks(){
       tasks.forEach(t => {
         const done = localStorage.getItem(`done-${t.id}`)==="true";
@@ -181,15 +145,8 @@
           <input type="checkbox" id="check-${t.id}" ${done?"checked":""} onchange="toggleComplete(this,'${t.id}')">
           ${t.label}: <strong>${t.time}</strong>
           <button class="alarm-btn" onclick="setAlarm('${t.time}','${t.label}')">🔔</button>
-        </label>
-        ${t.id.includes('study') ? `
-        <div class="topics">
-          <ul id="${t.id}-topics" class="topic-list"></ul>
-          <input type="text" placeholder="Add topic..." id="${t.id}-input"/>
-          <button onclick="addTopic('${t.id}')">Add</button>
-        </div>` : ''}`;
+        </label>`;
         container.appendChild(d);
-        if (t.id.includes('study')) renderTopics(t.id);
       });
     }
 
@@ -200,11 +157,6 @@
     if(localStorage.getItem("theme")==="dark") document.body.classList.add("dark");
 
     loadTasks();
-
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.register("data:text/javascript,self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>new Response('Offline'))));")
-      .then(()=>console.log("SW active"));
-    }
   </script>
 </body>
 </html>
